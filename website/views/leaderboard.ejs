@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classement - Bot Discord</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🤖 Bot Discord</div>
+        <div class="nav-user">
+            <% if (user) { %>
+                <img src="<%= user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/images/default-avatar.png' %>"
+                    alt="Avatar" class="user-avatar">
+                <span>
+                    <%= user.username %>
+                </span>
+                <a href="/logout" class="logout-btn">Déconnexion</a>
+                <% } else { %>
+                    <a href="/login" class="logout-btn">Connexion</a>
+                    <% } %>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="/dashboard" class="sidebar-item">📊 Tableau de bord</a>
+            <a href="/leaderboard" class="sidebar-item active">🏆 Classement</a>
+        </div>
+
+        <div class="main-content">
+            <h1>🏆 Classement</h1>
+
+            <% if (!guildId) { %>
+                <p>Veuillez sélectionner un serveur dans le tableau de bord pour voir son classement.</p>
+                <% } else { %>
+                    <div class="leaderboard-table">
+                        <div class="leaderboard-row header">
+                            <div>Rang</div>
+                            <div>Utilisateur ID</div>
+                            <div>Pièces</div>
+                        </div>
+                        <% leaderboard.forEach((row, index)=> { %>
+                            <div class="leaderboard-row rank-<%= index + 1 %>">
+                                <div>#<%= index + 1 %>
+                                </div>
+                                <div>
+                                    <%= row.user_id %>
+                                </div>
+                                <div>
+                                    <%= row.coins %>
+                                </div>
+                            </div>
+                            <% }); %>
+                    </div>
+                    <% } %>
+        </div>
+    </div>
+</body>
+
+</html>

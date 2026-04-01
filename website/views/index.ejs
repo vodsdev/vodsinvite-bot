@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Discord - Accueil</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🤖 Bot Discord</div>
+        <div class="nav-user">
+            <% if (user) { %>
+                <a href="/dashboard" class="logout-btn">Tableau de bord</a>
+                <% } else { %>
+                    <a href="/login" class="logout-btn">Connexion</a>
+                    <% } %>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Bot Discord avec Système d'Invitations</h1>
+        <p>Gérez vos invitations, gagnez des pièces et suivez vos statistiques.</p>
+        <% if (!user) { %>
+            <a href="/login" class="cta-btn">Commencer maintenant</a>
+            <% } %>
+    </div>
+</body>
+
+</html>

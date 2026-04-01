@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord - Bot Discord</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+<div class="nav-brand">🤖 Bot Discord</div>
+<div class="nav-user">
+<% if (user) { %>
+<img src="<%= user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '/images/default-avatar.png' %>"
+alt="Avatar" class="user-avatar">
+<span><%= user.username %></span>
+<a href="/logout" class="logout-btn">Déconnexion</a>
+<% } %>
+</div>
+</nav>
+
+<div class="container">
+<div class="sidebar">
+<a href="/dashboard" class="sidebar-item active">📊 Tableau de bord</a>
+<a href="/leaderboard" class="sidebar-item">🏆 Classement</a>
+</div>
+
+<div class="main-content">
+<h1>📊 Tableau de bord</h1>
+
+<div class="guild-selector">
+<label for="guild-select">Sélectionnez un serveur:</label>
+<select id="guild-select">
+<option value="">Choisir un serveur...</option>
+<% guilds.forEach(guild => { %>
+<option value="<%= guild.id %>">
+<%= guild.name %>
+</option>
+<% }); %>
+</select>
+</div>
+
+<div id="stats-container" class="stats-container" style="display: none;">
+<div class="stats-grid">
+<div class="stat-card">
+<h3>💎 Pièces</h3>
+<div class="stat-value" id="coins-value">0</div>
+</div>
+<div class="stat-card">
+<h3>📨 Invitations</h3>
+<div class="stat-value" id="invites-value">0</div>
+</div>
+<div class="stat-card">
+<h3>📈 Progression</h3>
+<div class="stat-value" id="progress-value">0%</div>
+</div>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progress-fill"></div>
+</div>
+
+<div class="goal-info">
+Objectif: <span id="goal-value">0</span> pièces
+</div>
+</div>
+</div>
+</div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
