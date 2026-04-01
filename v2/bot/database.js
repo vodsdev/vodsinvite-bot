@@ -105,12 +105,6 @@ class Database {
             )`,
 
             `CREATE TABLE IF NOT EXISTS teams (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                guild_id TEXT,
-                name TEXT,
-                password TEXT,
-                admin_id TEXT,
-                channel_id TEXT,
                 total_wager INTEGER DEFAULT 0,
                 xp INTEGER DEFAULT 0,
                 level INTEGER DEFAULT 1,
@@ -163,12 +157,7 @@ class Database {
             { table: 'users', column: 'voice_minutes', type: 'INTEGER DEFAULT 0' },
             { table: 'teams', column: 'xp', type: 'INTEGER DEFAULT 0' },
             { table: 'teams', column: 'level', type: 'INTEGER DEFAULT 1' },
-            { table: 'teams', column: 'voice_channel_id', type: 'TEXT' },
-            { table: 'teams', column: 'guild_id', type: 'TEXT' },
-            { table: 'teams', column: 'name', type: 'TEXT' },
-            { table: 'teams', column: 'password', type: 'TEXT' },
-            { table: 'teams', column: 'admin_id', type: 'TEXT' },
-            { table: 'teams', column: 'channel_id', type: 'TEXT' }
+            { table: 'teams', column: 'voice_channel_id', type: 'TEXT' }
         ];
 
         for (const col of columns) {

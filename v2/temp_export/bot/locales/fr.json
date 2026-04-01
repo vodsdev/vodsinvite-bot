@@ -1,0 +1,18 @@
+{
+    "commands": {
+        "balance": {
+            "title": "💎 Solde",
+            "description": "Vous avez {{coins}} pièces",
+            "goal": "Objectif: {{goal}} pièces"
+        },
+        "invite": {
+            "title": "📨 Invitation",
+            "description": "Invitez des amis et gagnez des récompenses!",
+            "reward": "20 pièces par invitation"
+        }
+    },
+    "messages": {
+        "welcome": "Bienvenue {{user}}! Invité par {{inviter}}",
+        "coins_earned": "Vous avez gagné {{coins}} pièces!"
+    }
+}
