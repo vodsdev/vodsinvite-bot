@@ -275,7 +275,8 @@ class InviteBot {
                     thumbnail: member.user.displayAvatarURL()
                 });
 
-                const channel = guild.systemChannel || guild.channels.cache.find(c => c.type === 0);
+                const invitationChannelId = '1310942203937292318';
+                const channel = guild.channels.cache.get(invitationChannelId) || guild.systemChannel || guild.channels.cache.find(c => c.type === 0);
                 if (channel) {
                     await channel.send({ embeds: [welcomeEmbed] }).catch(() => { });
                 }
