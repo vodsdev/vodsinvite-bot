@@ -130,9 +130,9 @@ class InviteBot {
         // Cache des invitations
         await this.cacheInvites();
 
-        // Synchronisation des commandes (Global uniquement pour éviter les doublons)
-        // Note: Pour supprimer les doublons sur un serveur spécifique, décommentez la ligne suivante :
-        // await registerCommands(this.client, new Collection(), '1198646731760488638');
+        // Synchronisation des commandes (Global + Guilde principale pour mise à jour immédiate)
+        const mainGuildId = '1198646731760488638';
+        await registerCommands(this.client, this.commands, mainGuildId);
         await registerCommands(this.client, this.commands);
 
         // Envoi de l'embed de statut à l'ID spécifique
