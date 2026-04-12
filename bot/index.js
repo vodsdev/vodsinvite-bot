@@ -233,6 +233,10 @@ class InviteBot {
         await this.queue.add(async () => {
             try {
                 const guild = member.guild;
+                
+                // Petit délai pour laisser le temps à l'API Discord de mettre à jour les compteurs d'invitations
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 const newInvites = await guild.invites.fetch();
                 const oldInvites = this.inviteCache.get(guild.id);
 
@@ -333,14 +337,28 @@ class InviteBot {
         // Gérer les succès (Premier Invite)
         await this.checkAchievement(inviter.id, guildId, 'first_invite', '�x�& Premier de cordée', 'Vous avez invité votre premier membre !');
 
-        // Custom Invite Log Embed
-        const currentInviteCount = await this.db.getUserInviteCount(inviter.id, guildId) + 1; // +1 because we haven't registered this invite yet
+        // Custom Invite Log Embed (Violet & Premium)
+        const currentInviteCount = await this.db.getUserInviteCount(inviter.id, guildId) + 1;
+        const inviterData = await this.db.getCoins(inviter.id, guildId);
+        
         const logEmbed = require('./utils/embeds').createEmbed({
-            title: '�x� Nouvelle invitation',
-            description: `<@${member.id}> (${member.user.username}) a été invité par <@${inviter.id}>\nqui a maintenant **${currentInviteCount}** invitations.\n\n${coinsEarned} crédits ajoutés à ${inviter.username}`,
-            color: 0x2ecc71
+            title: '✨ Nouvelle Arrivée !',
+            description: `Bienvenue <@${member.id}> sur **AI-Vods-Off** !\n\nVous avez été invité par <@${inviter.id}> qui détient désormais **${currentInviteCount}** invitations et possède actuellement **${(inviterData.coins + coinsEarned).toLocaleString()}** pièces. 💜`,
+            color: 0x9b59b6, // Violet premium
+            thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+            footer: { text: `Discord ID: ${member.id}` }
         });
-        this.logEmbedToGuild(guildId, logEmbed);
+        
+        // Envoi dans le salon spécifique (si configuré) ou salon système
+        const settings = await this.db.getGuildSettings(guildId);
+        const invitationChannelId = '1310942203937292318';
+        const channel = member.guild.channels.cache.get(invitationChannelId) || member.guild.channels.cache.get(settings.log_channel_id);
+        
+        if (channel) {
+            await channel.send({ embeds: [logEmbed] }).catch(() => { });
+        } else {
+            this.logEmbedToGuild(guildId, logEmbed);
+        }
 
         // Gérer les défis de team
         if (team) {
