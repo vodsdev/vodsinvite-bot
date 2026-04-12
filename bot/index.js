@@ -56,6 +56,7 @@ class InviteBot {
         this.db = new Database();
         this.commands = new Collection();
         this.inviteCache = new Map();
+        this.vanityCache = new Map(); // Nouveau: Cache pour les Vanity URLs
         this.cooldowns = new Collection();
 
         const PQueue = require('p-queue').default || require('p-queue');
@@ -186,6 +187,16 @@ class InviteBot {
             try {
                 const invites = await guild.invites.fetch();
                 this.inviteCache.set(guildId, new Map(invites.map(invite => [invite.code, invite])));
+                
+                // Cache Vanity URL if exists
+                if (guild.features.includes('VANITY_URL')) {
+                    const vanity = await guild.fetchVanityData().catch(() => null);
+                    if (vanity) {
+                        this.vanityCache.set(guildId, vanity.uses);
+                        logger.info(`Cached Vanity URL for ${guild.name}: ${vanity.uses} uses`);
+                    }
+                }
+                
                 logger.info(`Cached ${invites.size} invites for ${guild.name}`);
             } catch (error) {
                 logger.error(`Erreur cache invitations ${guild.name}:`, error);
@@ -234,34 +245,61 @@ class InviteBot {
             try {
                 const guild = member.guild;
                 
-                // Petit délai pour laisser le temps à l'API Discord de mettre à jour les compteurs d'invitations
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Délai augmenté pour laisser le temps à l'API Discord de synchroniser les compteurs
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 const newInvites = await guild.invites.fetch();
                 const oldInvites = this.inviteCache.get(guild.id);
 
                 let inviter = null;
                 let usedInvite = null;
+                let isVanity = false;
 
-                // Enregistrement des données d'invitation pour debug
-                logger.info(`Nouveau membre : ${member.user.tag} (${member.id})`);
+                logger.info(`[TRACKING] Nouveau membre : ${member.user.tag} (${member.id})`);
+                
                 if (oldInvites) {
-                    logger.info(`Comparaison des invitations: ${oldInvites.size} anciennes vs ${newInvites.size} nouvelles`);
+                    logger.info(`[TRACKING] Comparaison: ${oldInvites.size} anciennes vs ${newInvites.size} nouvelles`);
+                    
                     for (const [code, invite] of newInvites) {
                         const oldInvite = oldInvites.get(code);
                         const oldUses = oldInvite ? oldInvite.uses : 0;
+                        
                         if (invite.uses > oldUses) {
                             usedInvite = invite;
                             inviter = invite.inviter;
-                            logger.info(`Invitation trouvée : ${code} (${invite.uses} utilisations, était ${oldUses}) par ${inviter ? inviter.tag : 'Inconnu'}`);
+                            logger.info(`[TRACKING] Invitation trouvée : ${code} (${oldUses} -> ${invite.uses}) par ${inviter ? inviter.tag : 'Inconnu'}`);
                             break;
                         }
                     }
+
+                    // Si pas trouvé, vérifier Vanity URL
+                    if (!usedInvite && guild.features.includes('VANITY_URL')) {
+                        const newVanity = await guild.fetchVanityData().catch(() => null);
+                        const oldVanityUses = this.vanityCache.get(guild.id) || 0;
+                        
+                        if (newVanity && newVanity.uses > oldVanityUses) {
+                            isVanity = true;
+                            this.vanityCache.set(guild.id, newVanity.uses);
+                            logger.info(`[TRACKING] Join via Vanity URL detected (${oldVanityUses} -> ${newVanity.uses})`);
+                        }
+                    }
+
+                    // Si toujours pas trouvé, vérifier si une NOUVELLE invitation a été créée
+                    if (!usedInvite && !isVanity && newInvites.size > oldInvites.size) {
+                        for (const [code, invite] of newInvites) {
+                            if (!oldInvites.has(code) && invite.uses > 0) {
+                                usedInvite = invite;
+                                inviter = invite.inviter;
+                                logger.info(`[TRACKING] Nouvelle invitation détectée et utilisée : ${code} (1 utilisation) par ${inviter ? inviter.tag : 'Inconnu'}`);
+                                break;
+                            }
+                        }
+                    }
                 } else {
-                    logger.warn(`Pas de cache d'invitations pour le serveur ${guild.id}`);
+                    logger.warn(`[TRACKING] Pas de cache pour ${guild.id}`);
                 }
 
-                // Mettre à jour le cache
+                // Mettre à jour le cache immédiatement après la détection
                 this.inviteCache.set(guild.id, new Map(newInvites.map(invite => [invite.code, invite])));
 
                 // Message public de bienvenue (Salon spécifique)
@@ -305,7 +343,8 @@ class InviteBot {
                         }
                     }
                 } else {
-                    logger.info(`Aucun inviteur détecté pour ${member.user.tag} (Join direct ou auto-invitation)`);
+                    const reason = isVanity ? 'Vanity URL' : (newInvites.size === oldInvites.size ? 'Aucun changement de compteur' : 'Méthode inconnue');
+                    logger.info(`[TRACKING] Aucun inviteur récompensable pour ${member.user.tag} (${reason})`);
                 }
 
                 // Envoyer message de bienvenue
