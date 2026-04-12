@@ -145,6 +145,16 @@ class Database {
                 achievement_id TEXT,
                 unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY(user_id, guild_id, achievement_id)
+            )`,
+
+            `CREATE TABLE IF NOT EXISTS seasons (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                guild_id TEXT,
+                name TEXT,
+                start_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                end_at DATETIME,
+                prize_coins INTEGER,
+                is_active BOOLEAN DEFAULT TRUE
             )`
         ];
 
@@ -583,6 +593,50 @@ VALUES (?, ?, ?, ?)`,
         const backupPath = path.join(__dirname, `backup_${Date.now()}.sqlite`);
         fs.copyFileSync(this.dbPath, backupPath);
         logger.info(`Sauvegarde de la base de données effectuée : ${backupPath}`);
+    }
+
+    // Méthodes Saisons
+    async startSeason(guildId, name, durationDays, prize) {
+        // Désactiver les anciennes saisons
+        await this.run('UPDATE seasons SET is_active = FALSE WHERE guild_id = ?', [guildId]);
+
+        const endAt = new Date();
+        endAt.setDate(endAt.getDate() + durationDays);
+
+        return await this.run(
+            'INSERT INTO seasons (guild_id, name, end_at, prize_coins) VALUES (?, ?, ?, ?)',
+            [guildId, name, endAt.toISOString(), prize]
+        );
+    }
+
+    async getActiveSeason(guildId) {
+        return await this.get(
+            'SELECT * FROM seasons WHERE guild_id = ? AND is_active = TRUE AND end_at > CURRENT_TIMESTAMP',
+            [guildId]
+        );
+    }
+
+    async getSeasonLeaderboard(guildId, startAt, endAt) {
+        return await this.all(
+            `SELECT t.name, t.id, COUNT(i.id) as invite_count
+             FROM teams t
+             JOIN team_members tm ON t.id = tm.team_id
+             JOIN invites i ON tm.user_id = i.inviter_id
+             WHERE i.guild_id = ? AND i.created_at BETWEEN ? AND ? AND i.has_left = FALSE
+             GROUP BY t.id
+             ORDER BY invite_count DESC`,
+            [guildId, startAt, endAt]
+        );
+    }
+
+    async endSeason(seasonId) {
+        await this.run('UPDATE seasons SET is_active = FALSE WHERE id = ?', [seasonId]);
+    }
+
+    async getExpiredSeasons() {
+        return await this.all(
+            'SELECT * FROM seasons WHERE is_active = TRUE AND end_at <= CURRENT_TIMESTAMP'
+        );
     }
 }
 

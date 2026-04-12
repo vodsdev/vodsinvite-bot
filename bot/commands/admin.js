@@ -18,7 +18,12 @@ module.exports = {
         .addSubcommand(sub => sub.setName('challenge-add')
             .setDescription('  Créer un défi d\'invitation pour les teams'))
         .addSubcommand(sub => sub.setName('send-explanation')
-            .setDescription(' Envoyer l\'embed d\'explication complet dans le salon #invitation')),
+            .setDescription(' Envoyer l\'embed d\'explication complet dans le salon #invitation'))
+        .addSubcommand(sub => sub.setName('start-season')
+            .setDescription(' Lancer une nouvelle compétition de teams (Saison)')
+            .addStringOption(opt => opt.setName('nom').setDescription('Nom de la saison (ex: Saison 1)').setRequired(true))
+            .addIntegerOption(opt => opt.setName('duree').setDescription('Durée en jours').setRequired(true).setMinValue(1))
+            .addIntegerOption(opt => opt.setName('prix').setDescription('Prix total à partager entre les vainqueurs').setRequired(true).setMinValue(100))),
 
     async execute(interaction, bot) {
         const subcommand = interaction.options.getSubcommand();
@@ -112,6 +117,38 @@ module.exports = {
 
             await channel.send({ embeds: [embed], components: [row] });
             return interaction.reply({ content: `✅ Embed d\'explication envoyé dans <#${invitationChannelId}> !`, flags: 64 });
+        }
+
+        if (subcommand === 'start-season') {
+            const name = interaction.options.getString('nom');
+            const duration = interaction.options.getInteger('duree');
+            const prize = interaction.options.getInteger('prix');
+
+            await bot.db.startSeason(interaction.guildId, name, duration, prize);
+
+            const endAt = new Date();
+            endAt.setDate(endAt.getDate() + duration);
+
+            const embed = createEmbed({
+                title: '🏆 Nouvelle Saison Lancée !',
+                description: `La compétition **${name}** vient de commencer !`,
+                color: 0xf1c40f,
+                fields: [
+                    { name: '⏳ Durée', value: `${duration} jours (Finit le <t:${Math.floor(endAt.getTime() / 1000)}:D>)`, inline: true },
+                    { name: '💰 Prix Total', value: `${prize.toLocaleString()} pièces`, inline: true },
+                    { name: '📍 Comment gagner ?', value: 'La team ayant accumulé le plus d\'invitations d\'ici la fin de la saison remportera le prix, réparti équitablement entre ses membres !' }
+                ],
+                footer: { text: 'Bot VodsInvite - Bonne chance à toutes les teams !' }
+            });
+
+            // Envoyer l'annonce dans le salon de logs/annonces
+            const invitationChannelId = '1310942203937292318';
+            const channel = interaction.guild.channels.cache.get(invitationChannelId);
+            if (channel) {
+                await channel.send({ content: '@everyone', embeds: [embed] });
+            }
+
+            return interaction.reply({ content: `✅ Saison **${name}** lancée avec succès pour **${duration}** jours !`, flags: 64 });
         }
 
         const embed = createEmbed({

@@ -59,6 +59,10 @@ module.exports = {
             sub.setName('set-password')
                 .setDescription(' [Admin Team] Changer le mot de passe de la team')
                 .addStringOption(opt => opt.setName('new_password').setDescription('Nouveau mot de passe').setRequired(true))
+        )
+        .addSubcommand(sub =>
+            sub.setName('season')
+                .setDescription(' Voir le classement de la saison en cours')
         ),
 
     async execute(interaction, bot) {
@@ -407,6 +411,29 @@ module.exports = {
                 footer: { text: ' = éligible récompense ( pts) |  = Admin' }
             });
             await interaction.reply({ embeds: [embed], flags: 64 });
+        } else if (subcommand === 'season') {
+            const activeSeason = await bot.db.getActiveSeason(guildId);
+            if (!activeSeason) return interaction.reply({ content: ' Aucune saison n\'est active pour le moment.', flags: 64 });
+
+            const leaderboard = await bot.db.getSeasonLeaderboard(guildId, activeSeason.start_at, activeSeason.end_at);
+            
+            const lines = leaderboard.map((t, i) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `**#${i + 1}**`;
+                return `${medal} **${t.name}** ⬢ \`${t.invite_count}\` invitations`;
+            });
+
+            const embed = createEmbed({
+                title: `🏆 Classement : ${activeSeason.name}`,
+                description: lines.join('\n') || 'Aucune team n\'a encore marqué de points.',
+                color: 0xf1c40f,
+                fields: [
+                    { name: '⏳ Fin de saison', value: `<t:${Math.floor(new Date(activeSeason.end_at).getTime() / 1000)}:R>`, inline: true },
+                    { name: '💰 Prix à gagner', value: `\`${activeSeason.prize_coins.toLocaleString()}\` pièces`, inline: true }
+                ],
+                footer: { text: 'Le prix sera réparti équitablement entre les membres de la team gagnante !' }
+            });
+
+            await interaction.reply({ embeds: [embed] });
         }
     },
 

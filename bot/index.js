@@ -819,6 +819,8 @@ class InviteBot {
                     }
                 }
             }
+            // Vérifier la fin de saison toutes les 5 minutes
+            await this.checkSeasonEnd();
         }, 5 * 60 * 1000);
     }
 
@@ -855,6 +857,51 @@ class InviteBot {
                 });
                 member.send({ embeds: [embed] }).catch(() => { });
             }
+        }
+    }
+
+    async checkSeasonEnd() {
+        const expiredSeasons = await this.db.getExpiredSeasons();
+        for (const season of expiredSeasons) {
+            const guildId = season.guild_id;
+            const leaderboard = await this.db.getSeasonLeaderboard(guildId, season.start_at, season.end_at);
+
+            if (leaderboard.length > 0) {
+                const winner = leaderboard[0];
+                const members = await this.db.getTeamMembers(winner.id);
+
+                if (members.length > 0) {
+                    const prizePerMember = Math.floor(season.prize_coins / members.length);
+                    for (const m of members) {
+                        await this.db.addCoins(m.user_id, guildId, prizePerMember);
+                    }
+
+                    // Annoncer le vainqueur
+                    const invitationChannelId = '1310942203937292318';
+                    const guild = this.client.guilds.cache.get(guildId);
+                    if (guild) {
+                        const channel = guild.channels.cache.get(invitationChannelId);
+                        if (channel) {
+                            const { createEmbed } = require('./utils/embeds');
+                            const embed = createEmbed({
+                                title: `🎊 FÉLICITATIONS : Fin de la Saison ${season.name} !`,
+                                description: `La compétition est terminée ! La team **${winner.name}** l\'emporte avec **${winner.invite_count}** invitations !`,
+                                color: 0x9b59b6,
+                                fields: [
+                                    { name: '🏆 Vainqueur', value: `Team **${winner.name}**`, inline: true },
+                                    { name: '💰 Prix Remporté', value: `${season.prize_coins.toLocaleString()} pièces`, inline: true },
+                                    { name: '💸 Distribution', value: `Chaque membre de la team (${members.length}) a reçu **${prizePerMember.toLocaleString()}** pièces !`, inline: false }
+                                ],
+                                footer: { text: 'Préparez-vous pour la prochaine saison !' }
+                            });
+                            await channel.send({ content: '@everyone', embeds: [embed] }).catch(() => { });
+                        }
+                    }
+                }
+            }
+            // Marquer comme terminée
+            await this.db.endSeason(season.id);
+            logger.info(`Saison ${season.name} terminée pour le serveur ${guildId}`);
         }
     }
 }
