@@ -14,7 +14,13 @@ module.exports = {
         ),
 
     async execute(interaction, bot) {
-        const subcommand = interaction.options.getSubcommand();
+        let subcommand = null;
+        try {
+            subcommand = interaction.options.getSubcommand();
+        } catch (e) {
+            // C'est probablement un bouton
+            subcommand = 'menu';
+        }
 
         if (subcommand === 'menu') {
             const embed = createEmbed({
@@ -29,7 +35,11 @@ module.exports = {
                 new ButtonBuilder().setCustomId('economy_leaderboard').setLabel('Classement').setStyle(ButtonStyle.Secondary)
             );
 
-            await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
+            if (interaction.isButton()) {
+                await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
+            } else {
+                await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
+            }
         } else if (subcommand === 'send') {
             const target = interaction.options.getUser('target');
             const amount = interaction.options.getInteger('montant');
@@ -55,7 +65,9 @@ module.exports = {
     async handleInteraction(interaction, bot, action) {
         const guildId = interaction.guild.id;
 
-        if (action === 'balance') {
+        if (action === 'menu') {
+            return this.execute(interaction, bot);
+        } else if (action === 'balance') {
             const userData = await bot.db.getCoins(interaction.user.id, guildId);
             const coins = userData.coins;
             const settings = await bot.db.getGuildSettings(guildId);
