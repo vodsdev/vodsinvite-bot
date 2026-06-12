@@ -335,7 +335,7 @@ class InviteBot {
                         const history = await this.db.getUserHistory(member.id, guild.id);
                         if (history) {
                             logger.info(`Re-join: ${member.user.tag} ignoré (Déjà venu)`);
-                            this.logToGuild(guild.id, `x  **Re-join** : \`${member.user.tag}\` est revenu, aucune pièce n'a été attribuée.`);
+                            this.logToGuild(guild.id, `✨ **Re-join** : \`${member.user.tag}\` est revenu, aucune pièce n'a été attribuée.`);
                         } else {
                             // Reward immediately (Zero Delay)
                             await this.handleInviteReward(member, inviter, usedInvite);
@@ -579,16 +579,16 @@ class InviteBot {
             const { createEmbed } = require('./utils/embeds');
 
             const welcomeEmbed = createEmbed({
-                title: `�xRx Bienvenue sur ${guild.name} !`,
-                description: `Salut ${member.user.username} ! On est ravis de t'avoir parmi nous.${inviter ? `\n\n�x Tu as été invité par **${inviter.username}**.` : ''}`,
+                title: `👋 Bienvenue sur ${guild.name} !`,
+                description: `Salut ${member.user.username} ! On est ravis de t'avoir parmi nous.${inviter ? `\n\n👤 Tu as été invité par **${inviter.username}**.` : ''}`,
                 color: 0x5865F2,
                 thumbnail: guild.iconURL({ dynamic: true }),
                 fields: [
-                    { name: '�x� Comment commencer ?', value: 'Rendez-vous dans <#1310942203937292318> et utilise les commandes ci-dessous.' },
-                    { name: '�x� Gains d\'invitations', value: '`/invites menu` � Crée ton lien perso et gagne **20 pièces** par membre invité.' },
-                    { name: '�x�  Compétition Teams', value: '`/team create` � Crée ton clan ou rejoins-en un pour gagner des bonus.' },
-                    { name: '�x` Tes Stats', value: '`/economy menu` � Vérifie ton solde et le classement général.' },
-                    { name: '� Aide', value: '`/utils help` � Menu d\'aide complet avec toutes les commandes.' }
+                    { name: '🔰 Comment commencer ?', value: 'Rendez-vous dans <#1310942203937292318> et utilise les commandes ci-dessous.' },
+                    { name: '💰 Gains d\'invitations', value: '`/invites menu` ➜ Crée ton lien perso et gagne **20 pièces** par membre invité.' },
+                    { name: '🛡️ Compétition Teams', value: '`/team create` ➜ Crée ton clan ou rejoins-en un pour gagner des bonus.' },
+                    { name: '📊 Tes Stats', value: '`/economy menu` ➜ Vérifie ton solde et le classement général.' },
+                    { name: '❓ Aide', value: '`/utils help` ➜ Menu d\'aide complet avec toutes les commandes.' }
                 ],
                 footer: { text: guild.name + ' ⬢ Bonne chance !' }
             });
@@ -757,11 +757,21 @@ class InviteBot {
     }
 
     async onInviteCreate(invite) {
-        await this.cacheInvites();
+        const guildInvites = this.inviteCache.get(invite.guild.id);
+        if (guildInvites) {
+            guildInvites.set(invite.code, invite);
+            logger.info(`[CACHE] Nouveau lien détecté automatiquement : ${invite.code} (Créé par: ${invite.inviter?.tag || 'Inconnu'})`);
+        } else {
+            await this.cacheInvites();
+        }
     }
 
     async onInviteDelete(invite) {
-        await this.cacheInvites();
+        const guildInvites = this.inviteCache.get(invite.guild.id);
+        if (guildInvites) {
+            guildInvites.delete(invite.code);
+            logger.info(`[CACHE] Lien supprimé : ${invite.code}`);
+        }
     }
 
     async sendStatusEmbed(userId) {
@@ -868,13 +878,13 @@ class InviteBot {
         if (justCompleted) {
             const reward = 150; // Bonus quête
             await this.db.addCoins(userId, guildId, reward);
-            this.logToGuild(guildId, `�x}� **Quête Complétée** : <@${userId}> a terminé sa quête quotidienne de type **${type}** ! (+${reward} pièces)`);
+            this.logToGuild(guildId, `�🏆� **Quête Complétée** : <@${userId}> a terminé sa quête quotidienne de type **${type}** ! (+${reward} pièces)`);
 
             const guild = this.client.guilds.cache.get(guildId);
             if (guild) {
                 const member = await guild.members.fetch(userId).catch(() => null);
                 if (member) {
-                    member.send(`�x}� Bravo ! Tu as terminé ta quête quotidienne et gagné **${reward}** pièces !`).catch(() => { });
+                    member.send(`�🏆� Bravo ! Tu as terminé ta quête quotidienne et gagné **${reward}** pièces !`).catch(() => { });
                 }
             }
         }
@@ -928,7 +938,7 @@ class InviteBot {
                                 color: 0x9b59b6,
                                 fields: [
                                     { name: '🏆 Vainqueur', value: `Team **${winner.name}**`, inline: true },
-                                    { name: '💰 Prix Remporté', value: `${season.prize_coins.toLocaleString()} pièces`, inline: true },
+                                    { name: '💰 Pri✨Remporté', value: `${season.prize_coins.toLocaleString()} pièces`, inline: true },
                                     { name: '💸 Distribution', value: `Chaque membre de la team (${members.length}) a reçu **${prizePerMember.toLocaleString()}** pièces !`, inline: false }
                                 ],
                                 footer: { text: 'Préparez-vous pour la prochaine saison !' }

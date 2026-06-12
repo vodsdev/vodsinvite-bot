@@ -1,0 +1,27 @@
+    async sendWelcomeMessage(member, inviter) {
+        try {
+            const guild = member.guild;
+            const { createEmbed } = require('./utils/embeds');
+
+            const welcomeEmbed = createEmbed({
+                title: `👋 Bienvenue sur ${guild.name} !`,
+                description: `Salut ${member.user.username} ! On est ravis de t'avoir parmi nous.${inviter ? `\n\n👤 Tu as été invité par **${inviter.username}**.` : ''}`,
+                color: 0x5865F2,
+                thumbnail: guild.iconURL({ dynamic: true }),
+                fields: [
+                    { name: '🔰 Comment commencer ?', value: 'Rendez-vous dans <#1310942203937292318> et utilise les commandes ci-dessous.' },
+                    { name: '💰 Gains d\'invitations', value: '`/invites menu` ➜ Crée ton lien perso et gagne **20 pièces** par membre invité.' },
+                    { name: '🛡️ Compétition Teams', value: '`/team create` ➜ Crée ton clan ou rejoins-en un pour gagner des bonus.' },
+                    { name: '📊 Tes Stats', value: '`/economy menu` ➜ Vérifie ton solde et le classement général.' },
+                    { name: '❓ Aide', value: '`/utils help` ➜ Menu d\'aide complet avec toutes les commandes.' }
+                ],
+                footer: { text: guild.name + ' ⬢ Bonne chance !' }
+            });
+
+            await member.send({ embeds: [welcomeEmbed] });
+        } catch (error) {
+            if (error.code !== 50007) {
+                logger.error('Erreur envoi message bienvenue:', error);
+            }
+        }
+    }
