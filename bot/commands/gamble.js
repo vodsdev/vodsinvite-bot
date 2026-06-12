@@ -55,7 +55,7 @@ module.exports = {
         if (gagne) {
             await bot.db.addCoins(interaction.user.id, interaction.guildId, mise);
             const embed = createEmbed({
-                title: '" Coinflip : GAGN !',
+                title: '🪙 Coinflip : GAGNÉ !',
                 description: `La pièce est tombée sur **${resultat.toUpperCase()}**.\nVous gagnez **${mise * 2}** pièces !`,
                 color: 0x2ecc71
             });
@@ -85,11 +85,11 @@ module.exports = {
         const crashPoint = this.generateCrashPoint();
         let currentMultiplier = 1.0;
 
-        const embed = createEmbed({
-            title: ' Crash - C\'est parti !',
-            description: `Mise : **${mise}** pièces\nMultiplicateur actuel : **1.00x**`,
-            color: 0x3498db
-        });
+            const embed = createEmbed({
+                title: '🚀 Crash - C\'est parti !',
+                description: `💰 Mise : **${mise}** pièces\n📈 Multiplicateur actuel : **1.00x**`,
+                color: 0x3498db
+            });
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('crash_cashout').setLabel('CASH OUT').setStyle(ButtonStyle.Success)
@@ -112,8 +112,8 @@ module.exports = {
                 collector.stop();
 
                 const crashEmbed = createEmbed({
-                    title: ' CRASH !',
-                    description: `Le jeu a crashé à **${crashPoint.toFixed(2)}x**.\nVous avez perdu vos **${mise}** pièces.`,
+                    title: '💥 CRASH !',
+                    description: `Le jeu a crashé à **${crashPoint.toFixed(2)}x**.\n\n❌ Vous avez perdu vos **${mise}** pièces.`,
                     color: 0xe74c3c
                 });
                 await interaction.editReply({ embeds: [crashEmbed], components: [] });
@@ -142,8 +142,8 @@ module.exports = {
             await bot.handleQuestProgress(interaction.user.id, interaction.guildId, 'crash_win', gain);
 
             const winEmbed = createEmbed({
-                title: ' CASH OUT !',
-                description: `Vous avez encaissé à **${currentMultiplier.toFixed(2)}x**.\nTotal gagné : **${gain}** pièces !`,
+                title: '💰 CASH OUT !',
+                description: `✅ Vous avez encaissé à **${currentMultiplier.toFixed(2)}x**.\n💎 Total gagné : **${gain}** pièces !`,
                 color: 0x2ecc71
             });
             await i.update({ embeds: [winEmbed], components: [] });

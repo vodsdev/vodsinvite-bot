@@ -112,7 +112,7 @@ class InviteBot {
     }
 
     async onReady() {
-        logger.info(`�S& Bot connecté en tant que ${this.client.user.tag}`);
+        logger.info(`✅ Bot connecté en tant que ${this.client.user.tag}`);
 
         // Diagnostic : Liste des serveurs
         const guilds = this.client.guilds.cache;
@@ -124,7 +124,7 @@ class InviteBot {
         // Statut du bot (invisible)
         this.client.user.setStatus('invisible');
         this.client.user.setActivity({
-            name: '�x� /invites - Rejoins l\'aventure !',
+            name: '📊 /invites - Rejoins l\'aventure !',
             type: ActivityType.Watching
         });
 
@@ -149,7 +149,7 @@ class InviteBot {
         require('node-cron').schedule('0 0 * * *', () => this.db.resetDailyQuests());
         this.checkExpiredRoles(); // Exécuter une fois au démarrage
 
-        logger.info('�x� Bot complètement initialisé');
+        logger.info('🚀 Bot complètement initialisé');
     }
 
     async checkExpiredRoles() {
@@ -245,8 +245,8 @@ class InviteBot {
             try {
                 const guild = member.guild;
                 
-                // Délai augmenté pour laisser le temps à l'API Discord de synchroniser les compteurs
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Délai pour laisser le temps à l'API Discord de synchroniser les compteurs
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 const newInvites = await guild.invites.fetch();
                 const oldInvites = this.inviteCache.get(guild.id);

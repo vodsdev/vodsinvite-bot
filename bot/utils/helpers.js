@@ -1,22 +1,21 @@
 const { REST, Routes } = require('discord.js');
-const { clientId, token } = require('../config');
+// Suppression de l'import config qui peut poser problème si le fichier n'est pas à jour
+const clientId = process.env.DISCORD_CLIENT_ID;
+const token = process.env.DISCORD_TOKEN;
 
-async function registerCommands(client, commands) {
+async function registerCommands(client, commands, guildId = null) {
     const rest = new REST({ version: '10' }).setToken(token);
     const commandsData = Array.from(commands.values()).map(command => command.data.toJSON());
 
     try {
-        console.log('🗑️ Nettoyage des commandes par serveur (pour éviter les doublons)...');
-        const guilds = client.guilds.cache;
-        for (const [guildId, guild] of guilds) {
-            try {
-                await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
-            } catch (err) { }
+        if (guildId) {
+            console.log(`🔄 Enregistrement des commandes pour le serveur ${guildId}...`);
+            await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsData });
+        } else {
+            console.log('🔄 Enregistrement des commandes globales...');
+            await rest.put(Routes.applicationCommands(clientId), { body: commandsData });
         }
-
-        console.log('🔄 Enregistrement des commandes globales...');
-        await rest.put(Routes.applicationCommands(clientId), { body: commandsData });
-        console.log(`✅ ${commandsData.length} commandes enregistrées parfaitement.`);
+        console.log(`✅ ${commandsData.length} commandes enregistrées.`);
     } catch (error) {
         console.error('❌ Erreur enregistrement commandes:', error);
     }

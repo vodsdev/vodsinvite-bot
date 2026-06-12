@@ -49,11 +49,11 @@ module.exports = {
         await bot.db.updateLastDaily(userId, guildId, streak);
 
         const embed = createEmbed({
-            title: ' Récompense Quotidienne',
-            description: `Félicitations ! Vous avez reçu **${dailyReward}** pièces.\n Série actuelle : **${streak}** jour(s)`,
+            title: '🎁 Récompense Quotidienne',
+            description: `Félicitations ! Vous avez reçu **${dailyReward}** pièces.\n\n🔥 Série actuelle : **${streak}** jour(s)`,
             color: 0xf1c40f,
-            thumbnail: interaction.user.displayAvatarURL(),
-            footer: { text: streak === 7 ? "Vous avez atteint la récompense maximale !" : `Revenez demain avant 48h pour ne pas perdre votre série !` }
+            thumbnail: interaction.user.displayAvatarURL({ dynamic: true }),
+            footer: { text: streak === 7 ? "🏆 Vous avez atteint la récompense maximale !" : `📅 Revenez demain pour augmenter votre série !` }
         });
 
         await interaction.reply({ embeds: [embed], flags: 64 });

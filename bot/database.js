@@ -499,6 +499,29 @@ VALUES (?, ?, ?, ?)`,
         );
     }
 
+    async addChallenge(guildId, description, target, reward) {
+        return await this.run(
+            'INSERT INTO team_challenges (guild_id, description, target_invites, reward_coins) VALUES (?, ?, ?, ?)',
+            [guildId, description, target, reward]
+        );
+    }
+
+    async getActiveChallenges(guildId) {
+        return await this.all(
+            'SELECT * FROM team_challenges WHERE guild_id = ? AND is_active = TRUE',
+            [guildId]
+        );
+    }
+
+    async incrementChallengeProgress(teamId, challengeId) {
+        await this.run(
+            `INSERT INTO team_challenge_progress (team_id, challenge_id, invite_count)
+             VALUES (?, ?, 1)
+             ON CONFLICT(team_id, challenge_id) DO UPDATE SET invite_count = invite_count + 1`,
+            [teamId, challengeId]
+        );
+    }
+
     async getTeamChallengeProgress(teamId) {
         return await this.all(
             'SELECT * FROM team_challenge_progress WHERE team_id = ?',

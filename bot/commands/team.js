@@ -7,7 +7,7 @@ const MAX_TEAM_MEMBERS = 15;
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('team')
-        .setDescription('  Système de Team et Compétition')
+        .setDescription('🛡️ Système de Team et Compétition')
         .addSubcommand(sub =>
             sub.setName('create')
                 .setDescription(' " Créer une nouvelle team (max 15 membres)')
@@ -72,17 +72,21 @@ module.exports = {
             const userTeam = await bot.db.getTeamByMember(interaction.user.id, interaction.guildId);
             if (!userTeam) return interaction.reply({ content: ' Vous devez faire partie d\'une team pour voir les défis.', flags: 64 });
 
-            const challenges = await bot.db.getTeamChallengeProgress(userTeam.id);
+            const challenges = await bot.db.getActiveChallenges(interaction.guildId);
+            const progress = await bot.db.getTeamChallengeProgress(userTeam.id);
             if (challenges.length === 0) return interaction.reply({ content: ' Aucun défi actif pour le moment.', flags: 64 });
 
             const embed = createEmbed({
                 title: `  Défis de Team : ${userTeam.name}`,
                 description: 'Travaillez ensemble pour atteindre ces objectifs !',
                 color: 0xf1c40f,
-                fields: challenges.map(c => ({
-                    name: ` ${c.description}`,
-                    value: ` Progression: \`${c.invite_count || 0}/${c.target_invites}\` invites\n Récompense: \`${c.reward_coins}\` pièces`
-                }))
+                fields: challenges.map(c => {
+                    const p = progress.find(pr => pr.challenge_id === c.id);
+                    return {
+                        name: `🏆 ${c.description}`,
+                        value: `📊 Progression: \`${p ? p.invite_count : 0}/${c.target_invites}\` invites\n💰 Récompense: \`${c.reward_coins}\` pièces`
+                    };
+                })
             });
 
             return interaction.reply({ embeds: [embed], flags: 64 });

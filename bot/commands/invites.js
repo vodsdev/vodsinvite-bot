@@ -53,7 +53,7 @@ module.exports = {
                 }
             });
 
-            const chars = [' ', '', '', '', '', ' ', '', ''];
+            const chars = [' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
             const maxVal = Math.max(...dailyCounts, 1);
             const sparkline = dailyCounts.map(count => {
                 const index = Math.floor((count / maxVal) * (chars.length - 1));
@@ -69,10 +69,10 @@ module.exports = {
                 color: 0x9b59b6,
                 thumbnail: interaction.user.displayAvatarURL({ dynamic: true }),
                 fields: [
-                    { name: ' Rétention', value: `\`${retentionRate}%\` (${valid} valides / ${left} partis)`, inline: true },
-                    { name: ' Aujourd\'hui', value: `\`+${today}\` membres`, inline: true },
-                    { name: '` 7 Derniers Jours', value: `\`+${last7DaysCount}\` membres`, inline: true },
-                    { name: ' Total Pièces', value: `\`${coins.toLocaleString()}\` pièces`, inline: true }
+                    { name: '📈 Rétention', value: `\`${retentionRate}%\` (${valid} valides / ${left} partis)`, inline: true },
+                    { name: '📅 Aujourd\'hui', value: `\`+${today}\` membres`, inline: true },
+                    { name: '🗓️ 7 Derniers Jours', value: `\`+${last7DaysCount}\` membres`, inline: true },
+                    { name: '💰 Total Pièces', value: `\`${coins.toLocaleString()}\` pièces`, inline: true }
                 ]
             });
 

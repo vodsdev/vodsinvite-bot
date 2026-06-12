@@ -4,23 +4,23 @@ const { createEmbed } = require('../utils/embeds');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('admin')
-        .setDescription('"️ Configuration système')
+        .setDescription('⚙️ Configuration système')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addSubcommand(sub => sub.setName('panel').setDescription(' Ouvrir le panneau d\'administration'))
+        .addSubcommand(sub => sub.setName('panel').setDescription('📂 Ouvrir le panneau d\'administration'))
         .addSubcommand(sub => sub.setName('add-coins')
-            .setDescription(' Ajouter des pièces à un utilisateur')
+            .setDescription('➕ Ajouter des pièces à un utilisateur')
             .addUserOption(opt => opt.setName('target').setDescription('L\'utilisateur').setRequired(true))
             .addIntegerOption(opt => opt.setName('amount').setDescription('Montant de pièces').setRequired(true).setMinValue(1)))
         .addSubcommand(sub => sub.setName('remove-coins')
-            .setDescription(' Retirer des pièces à un utilisateur')
+            .setDescription('➖ Retirer des pièces à un utilisateur')
             .addUserOption(opt => opt.setName('target').setDescription('L\'utilisateur').setRequired(true))
             .addIntegerOption(opt => opt.setName('amount').setDescription('Montant de pièces').setRequired(true).setMinValue(1)))
         .addSubcommand(sub => sub.setName('challenge-add')
-            .setDescription('  Créer un défi d\'invitation pour les teams'))
+            .setDescription('🆕 Créer un défi d\'invitation pour les teams'))
         .addSubcommand(sub => sub.setName('send-explanation')
-            .setDescription(' Envoyer l\'embed d\'explication complet dans le salon #invitation'))
+            .setDescription('📢 Envoyer l\'embed d\'explication complet dans le salon #invitation'))
         .addSubcommand(sub => sub.setName('start-season')
-            .setDescription(' Lancer une nouvelle compétition de teams (Saison)')
+            .setDescription('🏁 Lancer une nouvelle compétition de teams (Saison)')
             .addStringOption(opt => opt.setName('nom').setDescription('Nom de la saison (ex: Saison 1)').setRequired(true))
             .addIntegerOption(opt => opt.setName('duree').setDescription('Durée en jours').setRequired(true).setMinValue(1))
             .addIntegerOption(opt => opt.setName('prix').setDescription('Prix total à partager entre les vainqueurs').setRequired(true).setMinValue(100))),
@@ -156,10 +156,10 @@ module.exports = {
             description: 'Utilisez les boutons ci-dessous pour modifier les paramètres globaux du bot.',
             color: 0x34495e,
             fields: [
-                { name: '"️ Paramètres', value: 'Coins Goal, Rôles Admin, etc.', inline: true },
-                { name: ' Rôles', value: 'Paliers de récompenses.', inline: true },
-                { name: ': Sécurité', value: 'Anti-Alt ( compte), etc.', inline: true },
-                { name: ' Logs', value: 'Salon de notifications.', inline: true }
+                { name: '⚙️ Paramètres', value: 'Coins Goal, Rôles Admin, etc.', inline: true },
+                { name: '🎭 Rôles', value: 'Paliers de récompenses.', inline: true },
+                { name: '🛡️ Sécurité', value: 'Anti-Alt (âge compte), etc.', inline: true },
+                { name: '📜 Logs', value: 'Salon de notifications.', inline: true }
             ]
         });
 
@@ -201,8 +201,8 @@ module.exports = {
             await interaction.showModal(modal);
         } else if (action === 'open-roles') {
             const settings = await bot.db.getGuildSettings(interaction.guildId);
-            const roles = settings.reward_roles ? JSON.parse(settings.reward_roles) : {};
-
+            const rolesRaw = settings.reward_roles;
+            const roles = (typeof rolesRaw === 'string' ? JSON.parse(rolesRaw) : rolesRaw) || {};
 
             const modal = new ModalBuilder()
                 .setCustomId('admin_submit-roles')
@@ -230,7 +230,7 @@ module.exports = {
                 .setCustomId('min_account_age')
                 .setLabel(' minimum du compte (jours)')
                 .setPlaceholder('Ex: 7 (0 pour désactiver)')
-                .setValue((settings.min_account_age || 0).toString())
+                .setValue(String(settings.min_account_age || 0))
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
@@ -288,7 +288,7 @@ module.exports = {
 
         if (action === 'submit-setup') {
             const goal = parseInt(interaction.fields.getTextInputValue('coins_goal'));
-            const roleId = interaction.fields.getTextInputValue('admin_role_id');
+            const roleId = interaction.fields.getTextInputValue('admin_roles');
 
             if (isNaN(goal)) return interaction.reply({ content: ' L\'objectif de pièces doit être un nombre.', flags: 64 });
 
