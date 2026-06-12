@@ -31,8 +31,9 @@ module.exports = {
             });
 
             const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('economy_balance').setLabel('Mon Solde').setStyle(ButtonStyle.Primary),
-                new ButtonBuilder().setCustomId('economy_leaderboard').setLabel('Classement').setStyle(ButtonStyle.Secondary)
+                new ButtonBuilder().setCustomId('economy_balance').setLabel('Mon Solde').setStyle(ButtonStyle.Primary).setEmoji('💰'),
+                new ButtonBuilder().setCustomId('economy_profile').setLabel('Profil Visuel').setStyle(ButtonStyle.Success).setEmoji('👤'),
+                new ButtonBuilder().setCustomId('economy_leaderboard').setLabel('Classement').setStyle(ButtonStyle.Secondary).setEmoji('🏆')
             );
 
             if (interaction.isButton()) {
@@ -67,6 +68,26 @@ module.exports = {
 
         if (action === 'menu') {
             return this.execute(interaction, bot);
+        } else if (action === 'profile') {
+            const userData = await bot.db.getCoins(interaction.user.id, guildId);
+            const invites = await bot.db.getUserInviteCount(interaction.user.id, guildId);
+            const team = await bot.db.getTeamByMember(interaction.user.id, guildId);
+            const achievements = await bot.db.all('SELECT * FROM user_achievements WHERE user_id = ? AND guild_id = ?', [interaction.user.id, guildId]);
+
+            const embed = createEmbed({
+                title: `👤 Profil de ${interaction.user.username}`,
+                color: 0x3498db,
+                thumbnail: interaction.user.displayAvatarURL({ dynamic: true }),
+                fields: [
+                    { name: '💰 Économie', value: `Solde: **${userData.coins.toLocaleString()}**\nSérie Daily: **${userData.daily_streak}** j`, inline: true },
+                    { name: '📨 Invitations', value: `Total: **${invites}**\nVocal: **${userData.voice_minutes}** min`, inline: true },
+                    { name: '🛡️ Team', value: team ? `**${team.name}** (Niv. ${team.level})` : 'Aucune team', inline: true },
+                    { name: '🏆 Succès', value: achievements.length > 0 ? achievements.map(a => `🏅 \`${a.achievement_id}\``).join(' ') : 'Aucun succès débloqué', inline: false }
+                ],
+                footer: { text: 'ID: ' + interaction.user.id }
+            });
+
+            await interaction.reply({ embeds: [embed], flags: 64 });
         } else if (action === 'balance') {
             const userData = await bot.db.getCoins(interaction.user.id, guildId);
             const coins = userData.coins;
@@ -103,7 +124,7 @@ module.exports = {
 
             const description = leaderboard.map((user, index) => {
                 const globalIndex = offset + index;
-                const rank = globalIndex === 0 ? '' : globalIndex === 1 ? '' : globalIndex === 2 ? '' : `**#${globalIndex + 1}**`;
+                const rank = globalIndex === 0 ? '🥇' : globalIndex === 1 ? '🥈' : globalIndex === 2 ? '🥉' : `**#${globalIndex + 1}**`;
                 return `${rank} <@${user.user_id}> ⬢ \`${user.coins.toLocaleString()}\` pièces`;
             }).join('\n');
 

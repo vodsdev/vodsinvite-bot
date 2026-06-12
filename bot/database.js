@@ -155,6 +155,20 @@ class Database {
                 end_at DATETIME,
                 prize_coins INTEGER,
                 is_active BOOLEAN DEFAULT TRUE
+            )`,
+            
+            `CREATE TABLE IF NOT EXISTS team_wagers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                guild_id TEXT,
+                team1_id INTEGER,
+                team2_id INTEGER,
+                bet_amount INTEGER,
+                start_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                end_at DATETIME,
+                winner_id INTEGER,
+                status TEXT DEFAULT 'pending', -- pending, active, completed
+                FOREIGN KEY (team1_id) REFERENCES teams(id),
+                FOREIGN KEY (team2_id) REFERENCES teams(id)
             )`
         ];
 
@@ -660,6 +674,48 @@ VALUES (?, ?, ?, ?)`,
         return await this.all(
             'SELECT * FROM seasons WHERE is_active = TRUE AND end_at <= CURRENT_TIMESTAMP'
         );
+    }
+
+    // Méthodes Team Wagers
+    async createTeamWager(guildId, team1Id, team2Id, amount, durationHours) {
+        const endAt = new Date();
+        endAt.setHours(endAt.getHours() + durationHours);
+        return await this.run(
+            'INSERT INTO team_wagers (guild_id, team1_id, team2_id, bet_amount, end_at, status) VALUES (?, ?, ?, ?, ?, "active")',
+            [guildId, team1Id, team2Id, amount, endAt.toISOString()]
+        );
+    }
+
+    async getActiveTeamWagers(guildId) {
+        return await this.all(
+            'SELECT * FROM team_wagers WHERE guild_id = ? AND status = "active"',
+            [guildId]
+        );
+    }
+
+    async getTeamWagerStats(wagerId) {
+        const wager = await this.get('SELECT * FROM team_wagers WHERE id = ?', [wagerId]);
+        if (!wager) return null;
+
+        const team1Invites = await this.get(
+            `SELECT COUNT(*) as count FROM invites i 
+             JOIN team_members tm ON i.inviter_id = tm.user_id 
+             WHERE tm.team_id = ? AND i.created_at BETWEEN ? AND ?`,
+            [wager.team1_id, wager.start_at, wager.end_at]
+        );
+
+        const team2Invites = await this.get(
+            `SELECT COUNT(*) as count FROM invites i 
+             JOIN team_members tm ON i.inviter_id = tm.user_id 
+             WHERE tm.team_id = ? AND i.created_at BETWEEN ? AND ?`,
+            [wager.team2_id, wager.start_at, wager.end_at]
+        );
+
+        return {
+            ...wager,
+            team1_invites: team1Invites.count,
+            team2_invites: team2Invites.count
+        };
     }
 }
 

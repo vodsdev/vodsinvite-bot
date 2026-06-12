@@ -375,7 +375,18 @@ class InviteBot {
         await this.handleQuestProgress(inviter.id, guildId, 'invite', 1);
 
         // Gérer les succès (Premier Invite)
-        await this.checkAchievement(inviter.id, guildId, 'first_invite', '�x�& Premier de cordée', 'Vous avez invité votre premier membre !');
+        await this.checkAchievement(inviter.id, guildId, 'first_invite', '🥇 Premier de cordée', 'Vous avez invité votre premier membre !');
+
+        // --- PARRAINAGE NIVEAU 2 ---
+        // On cherche qui a invité l'inviteur actuel
+        const level2InviterData = await this.db.getInviteByInvited(inviter.id, guildId);
+        if (level2InviterData && level2InviterData.inviter_id) {
+            const level2Reward = 5; // Bonus parrainage niveau 2
+            await this.db.addCoins(level2InviterData.inviter_id, guildId, level2Reward);
+            logger.info(`[PARRAINAGE L2] ${level2Reward} pièces ajoutées à ${level2InviterData.inviter_id} car il a parrainé ${inviter.tag}`);
+            
+            this.logToGuild(guildId, `👤 **Parrainage L2** : <@${level2InviterData.inviter_id}> a reçu **${level2Reward}** pièces car son filleul <@${inviter.id}> a invité un nouveau membre !`);
+        }
 
         // Custom Invite Log Embed (Violet & Premium)
         const currentInviteCount = await this.db.getUserInviteCount(inviter.id, guildId) + 1;

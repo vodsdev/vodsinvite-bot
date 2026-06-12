@@ -34,16 +34,19 @@ module.exports = {
 
         // Incrementer la série
         streak += 1;
-        if (streak > 7) streak = 7; // Cap à 7 jours ou on recommence au jour 1 ? Le cap est mieux pour récompenser l'assiduité.
+        // On ne cape plus la série à 7 pour permettre le bonus récurrent tous les 7 jours
+        // Mais on limite le multiplicateur de base pour éviter l'inflation infinie après 30 jours
+        const effectiveStreak = Math.min(streak, 30);
+        let dailyReward = 100 + (effectiveStreak * 50) + (Math.pow(effectiveStreak, 2) * 5);
 
-        // Calculer la récompense
-        let dailyReward = 100;
-        if (streak === 2) dailyReward = 150;
-        if (streak === 3) dailyReward = 200;
-        if (streak === 4) dailyReward = 250;
-        if (streak === 5) dailyReward = 300;
-        if (streak === 6) dailyReward = 350;
-        if (streak === 7) dailyReward = 1000;
+        // Calculer la récompense (Base 100 + bonus exponentiel)
+        // Formule: 100 + (streak * 50) + (streak^2 * 10)
+        // Bonus spécial tous les 7 jours
+        if (streak % 7 === 0) {
+            dailyReward += 500 + (streak * 10); // Bonus croissant tous les 7 jours
+        }
+        
+        dailyReward = Math.floor(dailyReward);
 
         await bot.db.addCoins(userId, guildId, dailyReward);
         await bot.db.updateLastDaily(userId, guildId, streak);

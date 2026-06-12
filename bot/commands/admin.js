@@ -23,7 +23,9 @@ module.exports = {
             .setDescription('🏁 Lancer une nouvelle compétition de teams (Saison)')
             .addStringOption(opt => opt.setName('nom').setDescription('Nom de la saison (ex: Saison 1)').setRequired(true))
             .addIntegerOption(opt => opt.setName('duree').setDescription('Durée en jours').setRequired(true).setMinValue(1))
-            .addIntegerOption(opt => opt.setName('prix').setDescription('Prix total à partager entre les vainqueurs').setRequired(true).setMinValue(100))),
+            .addIntegerOption(opt => opt.setName('prix').setDescription('Prix total à partager entre les vainqueurs').setRequired(true).setMinValue(100)))
+        .addSubcommand(sub => sub.setName('clean-fakes')
+            .setDescription('🛡️ Retirer les invitations des comptes supprimés ou suspects')),
 
     async execute(interaction, bot) {
         const subcommand = interaction.options.getSubcommand();
@@ -96,7 +98,7 @@ module.exports = {
                     },
                     {
                         name: '💰 Gains & Récompenses',
-                        value: '• **20 pièces** par membre invité (validé après 2 mins).\n• **Bonus Team** : Jusqu\'à +20% de gains.\n• **Rôles Multiplicateurs** : Plus vous avez de pièces, plus vous gagnez !'
+                        value: '• **20 pièces** par membre invité.\n• **Parrainage L2** : Gagnez **5 pièces** quand vos filleuls invitent !\n• **Séries (Daily)** : Bonus croissant chaque jour consécutif.\n• **Bonus Team** : Jusqu\'à +10% de gains selon le niveau.'
                     },
                     {
                         name: '📊 Commandes Utiles',
@@ -117,6 +119,23 @@ module.exports = {
 
             await channel.send({ embeds: [embed], components: [row] });
             return interaction.reply({ content: `✅ Embed d\'explication envoyé dans <#${invitationChannelId}> !`, flags: 64 });
+        }
+
+        if (subcommand === 'clean-fakes') {
+            const guildId = interaction.guildId;
+            const invites = await bot.db.all('SELECT * FROM invites WHERE guild_id = ? AND has_left = FALSE', [guildId]);
+            let removedCount = 0;
+
+            for (const inv of invites) {
+                const member = await interaction.guild.members.fetch(inv.invited_id).catch(() => null);
+                if (!member) {
+                    await bot.db.run('UPDATE invites SET has_left = TRUE WHERE id = ?', [inv.id]);
+                    await bot.db.addCoins(inv.inviter_id, guildId, -inv.coins_earned);
+                    removedCount++;
+                }
+            }
+
+            return interaction.reply({ content: `🛡️ Nettoyage terminé : **${removedCount}** invitations invalides retirées.`, flags: 64 });
         }
 
         if (subcommand === 'start-season') {

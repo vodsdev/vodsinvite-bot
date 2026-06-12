@@ -438,6 +438,37 @@ module.exports = {
             });
 
             await interaction.reply({ embeds: [embed] });
+        } else if (subcommand === 'wager') {
+            const userTeam = await bot.db.getTeamByMember(interaction.user.id, guildId);
+            if (!userTeam || userTeam.admin_id !== interaction.user.id) {
+                return interaction.reply({ content: '❌ Seul l\'admin de la team peut lancer un défi.', flags: 64 });
+            }
+
+            const targetName = interaction.options.getString('target').toLowerCase();
+            const amount = interaction.options.getInteger('amount');
+            const duration = interaction.options.getInteger('duree');
+
+            const targetTeam = await bot.db.getTeamByName(guildId, targetName);
+            if (!targetTeam) return interaction.reply({ content: '❌ Team adverse introuvable.', flags: 64 });
+            if (targetTeam.id === userTeam.id) return interaction.reply({ content: '❌ Vous ne pouvez pas vous défier vous-même.', flags: 64 });
+
+            if (userTeam.total_wager < amount) return interaction.reply({ content: `❌ Votre team n'a pas assez de fonds (**${userTeam.total_wager}** pièces disponibles).`, flags: 64 });
+            if (targetTeam.total_wager < amount) return interaction.reply({ content: `❌ La team adverse n'a pas assez de fonds (**${targetTeam.total_wager}** pièces).`, flags: 64 });
+
+            await bot.db.createTeamWager(guildId, userTeam.id, targetTeam.id, amount, duration);
+            
+            const embed = createEmbed({
+                title: '⚔️ GUERRE DE TEAMS DÉCLARÉE !',
+                description: `La team **${userTeam.name}** défie **${targetTeam.name}** !`,
+                color: 0xe74c3c,
+                fields: [
+                    { name: '💰 Mise', value: `${amount.toLocaleString()} pièces`, inline: true },
+                    { name: '⏳ Durée', value: `${duration} heures`, inline: true },
+                    { name: '📍 Objectif', value: 'La team qui réalise le plus d\'invitations d\'ici la fin du temps imparti remporte la mise de l\'autre !' }
+                ]
+            });
+
+            await interaction.reply({ content: `<@${targetTeam.admin_id}>`, embeds: [embed] });
         }
     },
 

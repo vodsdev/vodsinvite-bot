@@ -21,6 +21,17 @@ module.exports = {
             sub.setName('blackjack')
                 .setDescription('Battez le bot au Blackjack !')
                 .addIntegerOption(opt => opt.setName('mise').setDescription('Montant à parier').setRequired(true).setMinValue(50))
+        )
+        .addSubcommand(sub =>
+            sub.setName('roulette')
+                .setDescription('Misez sur une couleur ou un nombre !')
+                .addIntegerOption(opt => opt.setName('mise').setDescription('Montant à parier').setRequired(true).setMinValue(10))
+                .addStringOption(opt => opt.setName('pari').setDescription('Couleur (red, black, green) ou Nombre (0-36)').setRequired(true))
+        )
+        .addSubcommand(sub =>
+            sub.setName('slots')
+                .setDescription('Tentez le Jackpot aux machines à sous !')
+                .addIntegerOption(opt => opt.setName('mise').setDescription('Montant à parier').setRequired(true).setMinValue(10))
         ),
 
     async execute(interaction, bot) {
@@ -41,6 +52,10 @@ module.exports = {
             await this.handleCrash(interaction, bot, mise);
         } else if (subcommand === 'blackjack') {
             await this.handleBlackjack(interaction, bot, mise);
+        } else if (subcommand === 'roulette') {
+            await this.handleRoulette(interaction, bot, mise);
+        } else if (subcommand === 'slots') {
+            await this.handleSlots(interaction, bot, mise);
         }
     },
 
@@ -175,8 +190,8 @@ module.exports = {
 
         const buildEmbed = (status = 'En cours') => {
             return createEmbed({
-                title: ` Blackjack - ${status}`,
-                description: `Mise : **${mise}** pièces`,
+                title: `🃏 Blackjack - ${status}`,
+                description: `💰 Mise : **${mise}** pièces`,
                 fields: [
                     { name: 'Votre Main', value: `${playerHand.join(', ')} (Total: **${getSum(playerHand)}**)`, inline: true },
                     { name: 'Main du Croupier', value: `${dealerHand.join(', ')} (Total: **${getSum(dealerHand)}**)`, inline: true }
@@ -237,6 +252,75 @@ module.exports = {
                 }
             }
         });
+    },
+
+    async handleRoulette(interaction, bot, mise) {
+        const pari = interaction.options.getString('pari').toLowerCase();
+        const number = Math.floor(Math.random() * 37);
+        const color = number === 0 ? 'green' : (number % 2 === 0 ? 'black' : 'red');
+        
+        let gagne = false;
+        let multiplicateur = 0;
+
+        if (pari === color) {
+            gagne = true;
+            multiplicateur = color === 'green' ? 14 : 2;
+        } else if (parseInt(pari) === number) {
+            gagne = true;
+            multiplicateur = 35;
+        }
+
+        if (gagne) {
+            const gain = mise * (multiplicateur - 1);
+            await bot.db.addCoins(interaction.user.id, interaction.guildId, gain);
+            const embed = createEmbed({
+                title: '🎡 Roulette : GAGNÉ !',
+                description: `La bille s'est arrêtée sur **${number} (${color.toUpperCase()})**.\n\n✅ Vous gagnez **${mise * multiplicateur}** pièces !`,
+                color: 0x2ecc71
+            });
+            await interaction.reply({ embeds: [embed], flags: 64 });
+        } else {
+            await bot.db.addCoins(interaction.user.id, interaction.guildId, -mise);
+            const embed = createEmbed({
+                title: '🎡 Roulette : PERDU',
+                description: `La bille s'est arrêtée sur **${number} (${color.toUpperCase()})**.\n\n❌ Vous avez perdu vos **${mise}** pièces.`,
+                color: 0xe74c3c
+            });
+            await interaction.reply({ embeds: [embed], flags: 64 });
+        }
+    },
+
+    async handleSlots(interaction, bot, mise) {
+        const emojis = ['🍒', '🍋', '🍇', '💎', '🔔', '7️⃣'];
+        const reel1 = emojis[Math.floor(Math.random() * emojis.length)];
+        const reel2 = emojis[Math.floor(Math.random() * emojis.length)];
+        const reel3 = emojis[Math.floor(Math.random() * emojis.length)];
+
+        let multiplicateur = 0;
+        if (reel1 === reel2 && reel2 === reel3) {
+            multiplicateur = reel1 === '7️⃣' ? 50 : (reel1 === '💎' ? 25 : 10);
+        } else if (reel1 === reel2 || reel2 === reel3 || reel1 === reel3) {
+            multiplicateur = 2;
+        }
+
+        if (multiplicateur > 0) {
+            const gain = mise * (multiplicateur - 1);
+            await bot.db.addCoins(interaction.user.id, interaction.guildId, gain);
+            const embed = createEmbed({
+                title: '🎰 Machines à Sous : JACKPOT !',
+                description: `[ ${reel1} | ${reel2} | ${reel3} ]\n\n✅ Magnifique ! Vous gagnez **${mise * multiplicateur}** pièces !`,
+                color: 0xf1c40f
+            });
+            await interaction.reply({ embeds: [embed], flags: 64 });
+        } else {
+            await bot.db.addCoins(interaction.user.id, interaction.guildId, -mise);
+            const embed = createEmbed({
+                title: '🎰 Machines à Sous',
+                description: `[ ${reel1} | ${reel2} | ${reel3} ]\n\n❌ Pas de chance cette fois. Vous perdez **${mise}** pièces.`,
+                color: 0xe74c3c
+            });
+            await interaction.reply({ embeds: [embed], flags: 64 });
+        }
     }
 };
 

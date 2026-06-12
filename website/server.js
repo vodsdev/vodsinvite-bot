@@ -85,7 +85,50 @@ app.get('/leaderboard/:guildId?', async (req, res) => {
     }
 });
 
-// API
+// API de Sécurité (Clé d'API)
+const API_KEY = process.env.INTERNAL_API_KEY || 'vods_secret_key_2026';
+
+function ensureApiKey(req, res, next) {
+    const key = req.headers['x-api-key'];
+    if (key && key === API_KEY) return next();
+    res.status(401).json({ error: 'Clé d\'API invalide ou manquante' });
+}
+
+// API d'Interconnexion Économie (Cachée)
+app.get('/api/internal/balance/:guildId/:userId', ensureApiKey, async (req, res) => {
+    try {
+        const { guildId, userId } = req.params;
+        const userData = await db.getCoins(userId, guildId);
+        res.json({
+            user_id: userId,
+            guild_id: guildId,
+            coins: userData.coins || 0,
+            streak: userData.daily_streak || 0,
+            last_daily: userData.last_daily
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de la récupération du solde' });
+    }
+});
+
+app.post('/api/internal/balance/update', ensureApiKey, async (req, res) => {
+    try {
+        const { userId, guildId, amount, reason } = req.body;
+        if (!userId || !guildId || amount === undefined) {
+            return res.status(400).json({ error: 'Paramètres manquants' });
+        }
+
+        await db.addCoins(userId, guildId, amount);
+        console.log(`[API INTERNAL] ${amount} pièces ajoutées à ${userId} (${guildId}). Raison: ${reason || 'Non spécifiée'}`);
+        
+        const newData = await db.getCoins(userId, guildId);
+        res.json({ success: true, new_balance: newData.coins });
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de la mise à jour du solde' });
+    }
+});
+
+// API Publique (Dashboard)
 app.get('/api/user/stats', ensureAuthenticated, async (req, res) => {
     try {
         const { guildId } = req.query;
