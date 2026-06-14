@@ -38,14 +38,14 @@ module.exports = {
         const filledBlocks = Math.floor(progressPercent / 10);
 
         for (let i = 0; i < totalBlocks; i++) {
-            progressBar += i < filledBlocks ? '' : '';
+            progressBar += i < filledBlocks ? '▰' : '▱';
         }
 
         const status = quest.is_completed ? ' **Terminée**' : '⏳ **En cours**';
 
         const embed = createEmbed({
-            title: ' Quête Quotidienne',
-            description: `**Objectif :** ${questInfo.label}\n*${questInfo.desc}*\n\n**Progression :** \`${quest.progress} / ${quest.target}\`\n[${progressBar}] ${progressPercent}%\n\n**Statut :** ${status}`,
+            title: '🏆 Quête Quotidienne',
+            description: `**Objectif :** ${questInfo.label}\n*${questInfo.desc}*\n\n**Progression :** \`${quest.progress} / ${quest.target}\`\n\`${progressBar}\` ${progressPercent}%\n\n**Statut :** ${status}`,
             color: quest.is_completed ? 0x2ecc71 : 0x3498db,
             thumbnail: interaction.user.displayAvatarURL()
         });

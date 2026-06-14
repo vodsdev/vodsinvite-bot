@@ -9,15 +9,15 @@ module.exports = {
 
     async execute(interaction, bot) {
         const embed = createEmbed({
-            title: 'Gestionnaire d\'Invitations',
+            title: '📨 Gestionnaire d\'Invitations',
             description: 'Invitez vos amis et suivez vos performances en temps réel.\n\n💡 **Comment ça marche ?**\nCréez simplement un lien d\'invitation via Discord (Clic droit sur le serveur -> Inviter des gens). Tout lien que **vous** créez est automatiquement reconnu par le bot !',
             color: 0x3498db,
             thumbnail: interaction.guild.iconURL({ dynamic: true })
         });
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('invites_stats').setLabel('Mes Stats').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('invites_help').setLabel('Aide').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId('invites_stats').setLabel('Mes Stats').setStyle(ButtonStyle.Primary).setEmoji('📊'),
+            new ButtonBuilder().setCustomId('invites_help').setLabel('Aide').setStyle(ButtonStyle.Secondary).setEmoji('❓')
         );
 
         await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
@@ -64,7 +64,7 @@ module.exports = {
             const coins = userData.coins;
 
             const embed = createEmbed({
-                title: ' Statistiques d\'Invitations',
+                title: '📊 Statistiques d\'Invitations',
                 description: `Aperçu des performances de <@${interaction.user.id}>\n\n**Tendance (7 derniers jours)**\n\`${sparkline}\``,
                 color: 0x9b59b6,
                 thumbnail: interaction.user.displayAvatarURL({ dynamic: true }),

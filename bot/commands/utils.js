@@ -4,7 +4,7 @@ const { createEmbed } = require('../utils/embeds');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('utils')
-        .setDescription(' Commandes utilitaires et aide')
+        .setDescription('🛠️ Commandes utilitaires et aide')
         .addSubcommand(sub => sub.setName('help').setDescription('  Menu d\'aide interactif'))
         .addSubcommand(sub => sub.setName('server-info').setDescription(' Informations sur le serveur'))
         .addSubcommand(sub => sub.setName('user-info').setDescription(' Informations utilisateur').addUserOption(opt => opt.setName('target').setDescription('Cible')))
@@ -18,7 +18,7 @@ module.exports = {
         } else if (subcommand === 'server-info') {
             const { guild } = interaction;
             const embed = createEmbed({
-                title: `Infos Serveur : ${guild.name}`,
+                title: `🌐 Infos Serveur : ${guild.name}`,
                 thumbnail: guild.iconURL({ dynamic: true }),
                 color: 0x5865F2,
                 fields: [
@@ -32,11 +32,11 @@ module.exports = {
             const user = interaction.options.getUser('target') || interaction.user;
             const member = await interaction.guild.members.fetch(user.id);
             const embed = createEmbed({
-                title: `Profil : ${user.username}`,
+                title: `👤 Profil : ${user.username}`,
                 thumbnail: user.displayAvatarURL({ dynamic: true }),
                 color: 0x5865F2,
                 fields: [
-                    { name: '  ID', value: `\`${user.id}\``, inline: true },
+                    { name: '🆔 ID', value: `\`${user.id}\``, inline: true },
                     { name: ' Rejoint', value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`, inline: true },
                     { name: ' Rôle+', value: member.roles.highest.toString(), inline: true }
                 ]
@@ -55,7 +55,7 @@ module.exports = {
 
     async sendHelpMenu(interaction) {
         const embed = createEmbed({
-            title: 'Centre d\'Aide VodsInvite',
+            title: '❓ Centre d\'Aide VodsInvite',
             description: 'Bienvenue dans le menu d\'aide. Utilisez le menu déroulant ci-dessous pour explorer les différentes catégories de commandes.',
             color: 0xFFD700,
             fields: [
@@ -86,7 +86,7 @@ module.exports = {
 
             switch (category) {
                 case 'economy':
-                    title = ' Commandes ';
+                    title = '💰 Commandes Économie';
                     description = 'Gérez vos gains liés aux invitations.';
                     fields = [
                         { name: '`/economy balance`', value: 'Affiche votre solde et votre progression.' },
@@ -94,7 +94,7 @@ module.exports = {
                     ];
                     break;
                 case 'invites':
-                    title = ' Commandes Invitations';
+                    title = '📨 Commandes Invitations';
                     description = 'Outils pour inviter et suivre vos statistiques.';
                     fields = [
                         { name: '`/invites create`', value: 'Génère un lien d\'invitation unique.' },
@@ -102,7 +102,7 @@ module.exports = {
                     ];
                     break;
                 case 'admin':
-                    title = '"️ Commandes Administration';
+                    title = '⚙️ Commandes Administration';
                     description = 'Réservé aux administrateurs du serveur.';
                     fields = [
                         { name: '`/admin setup`', value: 'Ouvre le panneau de configuration interactif.' },
@@ -110,7 +110,7 @@ module.exports = {
                     ];
                     break;
                 case 'teams':
-                    title = '  Commandes Teams';
+                    title = '🛡️ Commandes Teams';
                     description = 'Rejoignez ou créez un clan pour gagner des bonus.';
                     fields = [
                         { name: '`/team create`', value: 'Crée une team et son salon privé.' },
